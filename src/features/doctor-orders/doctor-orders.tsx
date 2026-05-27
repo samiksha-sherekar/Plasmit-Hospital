@@ -85,10 +85,14 @@ const tabs: OrderTab[] = [
 ];
 
 export function DoctorOrdersPage() {
-  const searchParams = useSearchParams();
-  const requestedTab = searchParams.get("tab");
-  const defaultTab = tabs.some((tab) => tab.id === requestedTab) ? requestedTab : "blood";
+//   const searchParams = useSearchParams();
+//   const requestedTab = searchParams.get("tab") ?? undefined;
 
+// const defaultTab =
+//   requestedTab && tabs.some((tab) => tab.id === requestedTab)
+//     ? requestedTab
+//     : "blood";
+const defaultTab = "blood"
   return (
     <div className="space-y-6">
       <PageHeader

@@ -162,7 +162,7 @@ function RequestDrawer({
 
           <div className="grid gap-3 sm:grid-cols-2">
             <DetailItem label="Patient Name" value={request.patientName} />
-            <DetailItem label="UHID" value={request.uhid} />
+            {/* <DetailItem label="UHID" value={request.uhid} /> */}
             <DetailItem label="Blood Group" value={request.bloodGroup} />
             <DetailItem label="Blood Product" value={request.bloodProducts} />
             <DetailItem label="Units Ordered" value={request.unitsOrdered} />
@@ -218,7 +218,7 @@ function BloodRequestsTable({ searchQuery }: { searchQuery: string }) {
         cell: ({ row }) => (
           <div>
             <div className="font-medium text-foreground">{row.original.patientName}</div>
-            <div className="text-xs text-muted-foreground">{row.original.uhid}</div>
+            {/* <div className="text-xs text-muted-foreground">{row.original.uhid}</div> */}
           </div>
         ),
       },
@@ -275,7 +275,7 @@ function BloodRequestsTable({ searchQuery }: { searchQuery: string }) {
       [
         request.id,
         request.patientName,
-        request.uhid,
+        // request.uhid,
         request.bloodGroup,
         request.unitsOrdered,
         request.date,
