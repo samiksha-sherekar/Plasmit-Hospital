@@ -392,16 +392,16 @@ export function NurseDrugAdministrationPage() {
       <Tabs defaultValue="drug-order" className="space-y-4">
         <TabsList className="w-full gap-2 overflow-x-auto bg-primary/10 p-1 sm:w-fit">
           <TabsTrigger
-            value="drug-administration"
-            className="min-w-[168px] border border-primary/20 bg-background text-primary data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
-          >
-            Drug Administration
-          </TabsTrigger>
-          <TabsTrigger
             value="drug-order"
             className="min-w-[120px] border border-primary/20 bg-background text-primary data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
           >
             Drug Order
+          </TabsTrigger>
+          <TabsTrigger
+            value="drug-administration"
+            className="min-w-[168px] border border-primary/20 bg-background text-primary data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
+          >
+            Drug Administration
           </TabsTrigger>
         </TabsList>
 
