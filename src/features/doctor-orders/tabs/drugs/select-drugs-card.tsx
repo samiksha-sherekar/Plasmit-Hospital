@@ -3,7 +3,6 @@
 import * as React from "react";
 import { ChevronDown, Search } from "lucide-react";
 
-import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 
@@ -25,6 +24,27 @@ export function SelectDrugsCard({
   onToggleDrug: (order: DrugOrder, checked: boolean) => void;
 }) {
   const [open, setOpen] = React.useState(false);
+  const rootRef = React.useRef<HTMLDivElement | null>(null);
+  const inputRef = React.useRef<HTMLInputElement | null>(null);
+  const selectedValue = selectedOrders.map((order) => order.name).join(", ");
+
+  React.useEffect(() => {
+    if (!open) return;
+
+    const handlePointerDown = (event: PointerEvent) => {
+      if (!rootRef.current?.contains(event.target as Node)) {
+        setOpen(false);
+      }
+    };
+
+    document.addEventListener("pointerdown", handlePointerDown);
+    return () => document.removeEventListener("pointerdown", handlePointerDown);
+  }, [open]);
+
+  const openDropdown = () => {
+    setOpen(true);
+    onSearchChange("");
+  };
 
   return (
     <Card className="xl:sticky xl:top-4 xl:self-start">
@@ -36,58 +56,90 @@ export function SelectDrugsCard({
         {/* <Badge tone="info">{selectedIds.length} Selected</Badge> */}
       </CardHeader>
       <CardContent className="space-y-3">
-        <div className="relative">
-          <button
-            type="button"
-            className="flex h-10 w-full items-center justify-between gap-3 rounded-md border border-input bg-background px-3 text-left text-sm text-foreground outline-none transition hover:bg-surface-muted focus:ring-2 focus:ring-ring/20"
-            onClick={() => setOpen((current) => !current)}
-          >
-            <span className={selectedIds.length ? "text-foreground" : "text-muted-foreground"}>
-              {selectedIds.length ? `${selectedIds.length} drug(s) selected` : "Select drugs"}
-            </span>
-            <ChevronDown className={["h-4 w-4 text-muted-foreground transition", open ? "rotate-180" : ""].join(" ")} />
-          </button>
+        <div ref={rootRef} className="relative">
+          <div className="relative">
+            <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+            <Input
+              ref={inputRef}
+              className="pr-9 pl-9"
+              value={open ? search : selectedValue}
+              onFocus={openDropdown}
+              onClick={() => setOpen(true)}
+              onChange={(event) => {
+                if (!open) setOpen(true);
+                onSearchChange(event.target.value);
+              }}
+              onKeyDown={(event) => {
+                if (event.key === "Escape") {
+                  setOpen(false);
+                  inputRef.current?.blur();
+                }
+              }}
+              placeholder={open ? "Search ordered drugs..." : "Select drugs..."}
+            />
+            <button
+              type="button"
+              className="absolute right-2 top-1/2 inline-flex h-7 w-7 -translate-y-1/2 items-center justify-center rounded-md text-muted-foreground transition hover:bg-surface-muted hover:text-foreground"
+              aria-label={open ? "Close drug options" : "Open drug options"}
+              onClick={() => {
+                if (open) {
+                  setOpen(false);
+                  inputRef.current?.blur();
+                  return;
+                }
+
+                openDropdown();
+                window.setTimeout(() => inputRef.current?.focus(), 0);
+              }}
+            >
+              <ChevronDown className={["h-4 w-4 transition", open ? "rotate-180" : ""].join(" ")} />
+            </button>
+          </div>
 
           {open ? (
-            <div className="absolute left-0 right-0 top-full z-30 mt-2 rounded-md border border-border bg-surface p-2 shadow-lg">
-              <div className="relative mb-2">
-                <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                <Input className="pl-9" value={search} onChange={(event) => onSearchChange(event.target.value)} placeholder="Search ordered drugs..." autoFocus />
-              </div>
-              <div className="max-h-[360px] space-y-2 overflow-auto pr-1">
-                {orders.length ? (
-                  orders.map((order) => {
-                    const checked = selectedIds.includes(order.id);
-                    return (
-                      <label
-                        key={order.id}
-                        className={[
-                          "flex cursor-pointer items-start gap-3 rounded-md border p-3 transition",
-                          checked ? "border-primary bg-primary/10" : "border-border bg-background hover:bg-surface-muted",
-                        ].join(" ")}
-                      >
-                        <input
-                          type="checkbox"
-                          className="mt-1 h-4 w-4 rounded border-input text-primary focus:ring-ring"
-                          checked={checked}
-                          onChange={(event) => onToggleDrug(order, event.target.checked)}
-                        />
-                        <div className="min-w-0 flex-1">
-                          <div className="truncate text-sm font-semibold text-foreground">{order.name}</div>
-                          <div className="mt-1 text-xs text-muted-foreground">{order.form}</div>
+            <div className="absolute z-20 mt-2 max-h-[360px] w-full space-y-2 overflow-auto rounded-md border border-border bg-surface p-2 shadow-lg">
+              {orders.length ? (
+                orders.map((order) => {
+                  const checked = selectedIds.includes(order.id);
+
+                  return (
+                    <label
+                      key={order.id}
+                      className={[
+                        "flex cursor-pointer items-start gap-3 rounded-md border p-3 transition",
+                        checked
+                          ? "border-primary bg-primary/10"
+                          : "border-border bg-background hover:bg-surface-muted",
+                      ].join(" ")}
+                    >
+                      <input
+                        type="checkbox"
+                        className="mt-1 h-4 w-4 rounded border-input accent-primary focus:ring-ring"
+                        checked={checked}
+                        onChange={(event) => onToggleDrug(order, event.target.checked)}
+                      />
+
+                      <div className="min-w-0 flex-1">
+                        <div className="truncate text-sm font-semibold text-foreground">
+                          {order.name}
                         </div>
-                      </label>
-                    );
-                  })
-                ) : (
-                  <div className="rounded-md border border-dashed border-border p-4 text-sm text-muted-foreground">No drugs match the search.</div>
-                )}
-              </div>
+                        <div className="mt-1 text-xs text-muted-foreground">
+                          {order.form}
+                        </div>
+                      </div>
+                    </label>
+                  );
+                })
+              ) : (
+                <div className="rounded-md border border-dashed border-border p-4 text-sm text-muted-foreground">
+                  No drugs match the search.
+                </div>
+              )}
             </div>
           ) : null}
         </div>
 
-        {selectedIds.length ? (
+        {/* {selectedIds.length ? (
           <div className="space-y-2">
             {selectedOrders.map((order) => {
               return (
@@ -100,7 +152,7 @@ export function SelectDrugsCard({
           </div>
         ) : (
           <div className="rounded-md border border-dashed border-border p-4 text-sm text-muted-foreground">No drugs selected.</div>
-        )}
+        )} */}
       </CardContent>
     </Card>
   );
