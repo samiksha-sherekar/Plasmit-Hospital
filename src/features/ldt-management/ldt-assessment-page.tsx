@@ -49,6 +49,7 @@ type LdtConfig = {
 type AssessmentEntry = {
   id: string;
   fieldId: string;
+  date: string;
   time: string;
   value: AssessmentValue;
 };
@@ -117,6 +118,11 @@ const hourlySlots = Array.from({ length: 24 }, (_, hour) => `${String(hour).padS
 function formatCurrentTime() {
   const now = new Date();
   return `${String(now.getHours()).padStart(2, "0")}:${String(now.getMinutes()).padStart(2, "0")}`;
+}
+
+function formatCurrentDate() {
+  const now = new Date();
+  return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
 }
 
 function makeEntryId() {
@@ -325,10 +331,14 @@ function AssessmentEntryForm({
 function AssessmentSlotTable({
   fields,
   entries,
+  selectedDate,
+  onDateChange,
   onEdit,
 }: {
   fields: AssessmentField[];
   entries: AssessmentEntry[];
+  selectedDate: string;
+  onDateChange: (date: string) => void;
   onEdit: (entry: AssessmentEntry) => void;
 }) {
   const entriesByFieldAndSlot = React.useMemo(() => {
@@ -345,19 +355,25 @@ function AssessmentSlotTable({
           <CardTitle>Assessment / Time</CardTitle>
           <CardDescription>Rows are assessment names. Columns are 1 hour time intervals, and each value appears in its mapped slot.</CardDescription>
         </div>
-        <Badge tone={entries.length ? "success" : "muted"}>{entries.length} Values</Badge>
+        <div className="flex flex-wrap items-center gap-2">
+          <label className="flex items-center gap-2 text-xs font-medium text-muted-foreground">
+            Date
+            <Input className="h-9 w-[160px]" type="date" value={selectedDate} onChange={(event) => onDateChange(event.target.value)} />
+          </label>
+          <Badge tone={entries.length ? "success" : "muted"}>{entries.length} Values</Badge>
+        </div>
       </CardHeader>
       <CardContent>
         <div className="overflow-hidden rounded-lg border border-border bg-surface">
           <div className="max-w-full overflow-x-auto">
             <table className="w-full min-w-[1800px] border-collapse text-left text-sm">
-              <thead className="sticky top-0 z-10 bg-surface-muted text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+              <thead className="sticky top-0 z-10 bg-primary text-xs font-semibold uppercase tracking-wide text-primary-foreground">
                 <tr>
-                  <th className="sticky left-0 z-20 w-64 border-b border-r border-border bg-surface-muted px-[var(--density-table-cell-x)] py-[var(--density-table-cell-y)]">
+                  <th className="sticky left-0 z-20 w-64 border-b border-r border-primary-foreground/20 bg-primary px-[var(--density-table-cell-x)] py-[var(--density-table-cell-y)]">
                     Assessment / Time
                   </th>
                   {hourlySlots.map((slot) => (
-                    <th key={slot} className="min-w-32 border-b border-border px-[var(--density-table-cell-x)] py-[var(--density-table-cell-y)] text-center">
+                    <th key={slot} className="min-w-32 border-b border-r border-primary-foreground/20 px-[var(--density-table-cell-x)] py-[var(--density-table-cell-y)] text-center last:border-r-0">
                       {slot}
                     </th>
                   ))}
@@ -365,8 +381,8 @@ function AssessmentSlotTable({
               </thead>
               <tbody>
                 {fields.map((field) => (
-                  <tr key={field.id} className="border-b border-border last:border-0 hover:bg-surface-muted/70">
-                    <th className="sticky left-0 z-10 border-r border-border bg-surface px-[var(--density-table-cell-x)] py-[var(--density-table-cell-y)] align-top">
+                  <tr key={field.id} className="border-b border-border last:border-0 hover:bg-primary/5">
+                    <th className="sticky left-0 z-10 border-r border-border bg-primary/10 px-[var(--density-table-cell-x)] py-[var(--density-table-cell-y)] align-top">
                       <div className="font-medium normal-case tracking-normal text-foreground">{field.name}</div>
                       {/* <FieldTypeBadges field={field} /> */}
                     </th>
@@ -541,6 +557,7 @@ export function LdtAssessmentPage({ ldtId = defaultLdtId }: { ldtId?: string }) 
     value: getDefaultValue(firstField),
   }));
   const [entries, setEntries] = React.useState<AssessmentEntry[]>([]);
+  const [selectedDate, setSelectedDate] = React.useState(formatCurrentDate);
   const [editingEntry, setEditingEntry] = React.useState<AssessmentEntry | null>(null);
   const allowed = nurseRoles.includes(role);
 
@@ -548,8 +565,11 @@ export function LdtAssessmentPage({ ldtId = defaultLdtId }: { ldtId?: string }) 
     const nextFirstField = ldtConfig.assessments[0];
     setFormValues({ fieldId: nextFirstField.id, time: formatCurrentTime(), value: getDefaultValue(nextFirstField) });
     setEntries([]);
+    setSelectedDate(formatCurrentDate());
     setEditingEntry(null);
   }, [ldtConfig.id, ldtConfig.assessments]);
+
+  const dateEntries = React.useMemo(() => entries.filter((entry) => entry.date === selectedDate), [entries, selectedDate]);
 
   const intakeOutputEntries = React.useMemo<IntakeOutputEntry[]>(() => {
     return entries.flatMap((entry) => {
@@ -572,7 +592,13 @@ export function LdtAssessmentPage({ ldtId = defaultLdtId }: { ldtId?: string }) 
   const upsertEntry = (nextEntry: AssessmentEntry) => {
     setEntries((current) => {
       const nextSlot = getHourSlot(nextEntry.time);
-      const withoutSameSlot = current.filter((entry) => entry.id === nextEntry.id || entry.fieldId !== nextEntry.fieldId || getHourSlot(entry.time) !== nextSlot);
+      const withoutSameSlot = current.filter(
+        (entry) =>
+          entry.id === nextEntry.id ||
+          entry.date !== nextEntry.date ||
+          entry.fieldId !== nextEntry.fieldId ||
+          getHourSlot(entry.time) !== nextSlot,
+      );
       const exists = withoutSameSlot.some((entry) => entry.id === nextEntry.id);
       return exists ? withoutSameSlot.map((entry) => (entry.id === nextEntry.id ? nextEntry : entry)) : [...withoutSameSlot, nextEntry];
     });
@@ -593,7 +619,7 @@ export function LdtAssessmentPage({ ldtId = defaultLdtId }: { ldtId?: string }) 
       return;
     }
 
-    upsertEntry({ id: makeEntryId(), fieldId: field.id, time: formValues.time, value: formValues.value });
+    upsertEntry({ id: makeEntryId(), fieldId: field.id, date: selectedDate, time: formValues.time, value: formValues.value });
     setFormValues((current) => ({ ...current, value: getDefaultValue(field) }));
 
     const ioTarget = isIoField(field) ? (field.config.trackInIntake && field.config.trackInOutput ? " and Intake/Output updated" : field.config.trackInIntake ? " and Intake updated" : " and Output updated") : "";
@@ -653,7 +679,13 @@ export function LdtAssessmentPage({ ldtId = defaultLdtId }: { ldtId?: string }) 
         onSubmit={handleSubmit}
       />
 
-      <AssessmentSlotTable fields={ldtConfig.assessments} entries={entries} onEdit={setEditingEntry} />
+      <AssessmentSlotTable
+        fields={ldtConfig.assessments}
+        entries={dateEntries}
+        selectedDate={selectedDate}
+        onDateChange={setSelectedDate}
+        onEdit={setEditingEntry}
+      />
 
       <IntakeOutputPanel entries={intakeOutputEntries} />
 

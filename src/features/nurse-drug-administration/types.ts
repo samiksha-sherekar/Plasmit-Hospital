@@ -18,6 +18,11 @@ export type NurseDrugOrder = {
   days: string;
   route: string;
   instructions: string;
+  orderedQty: number;
+  dispensedQty: number;
+  receivedQty: number;
+  administeredQty: number;
+  discontinuedReason?: string;
   taperedDose?: string;
   bolusDose?: string;
   bagVolume?: number;

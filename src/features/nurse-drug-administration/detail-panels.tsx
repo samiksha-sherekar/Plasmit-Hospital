@@ -200,7 +200,7 @@ export function AdministrationDetailsPanel({
       description={`${detail.orderName} / ${detail.category}`}
       footer={
         <div className="flex justify-end gap-2">
-          <Button variant="outline" onClick={() => onOpenChange(false)}>
+          <Button className="bg-danger" onClick={() => onOpenChange(false)}>
             Cancel
           </Button>
           <Button onClick={accept}>
@@ -322,7 +322,7 @@ export function FluidAdministrationDetailsPanel({
       description={`${detail.orderName} / ${detail.category}`}
       footer={
         <div className="flex justify-end gap-2">
-          <Button variant="outline" onClick={() => onOpenChange(false)}>
+          <Button className="bg-danger" onClick={() => onOpenChange(false)}>
             Cancel
           </Button>
           <Button onClick={accept}>

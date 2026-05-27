@@ -3,6 +3,7 @@
 import * as React from "react";
 import { toast } from "sonner";
 
+import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
@@ -13,6 +14,22 @@ import { SelectDrugsCard } from "./drugs/select-drugs-card";
 import { SummaryCard } from "./drugs/summary-card";
 import type { DrugOrder, OrderDraft } from "./drugs/types";
 import { calculateAutoQty, makeDraft, remainingQty } from "./drugs/utils";
+
+function SubmitOrderCard({ count, onSubmit }: { count: number; onSubmit: () => void }) {
+  return (
+    <Card className="xl:col-start-2">
+      <CardContent className="flex flex-col gap-3 p-4 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <div className="text-sm font-semibold text-foreground">Ready to submit</div>
+          <div className="mt-1 text-xs text-muted-foreground">{count ? `${count} selected drug order${count > 1 ? "s" : ""} will be submitted.` : "Select drugs before submitting."}</div>
+        </div>
+        <Button type="button" disabled={!count} onClick={onSubmit}>
+          Submit
+        </Button>
+      </CardContent>
+    </Card>
+  );
+}
 
 function DrugAdministrationView({ orders }: { orders: DrugOrder[] }) {
   const activeOrders = orders.filter((order) => !order.isHistorical || order.modifiedFromId);
@@ -137,6 +154,10 @@ export function DrugsTab() {
     toast.success("Drug removed from summary");
   };
 
+  const submitOrders = () => {
+    toast.success(`${selectedOrders.length} drug order${selectedOrders.length > 1 ? "s" : ""} submitted`);
+  };
+
   return (
     <div className="space-y-4">
       <Tabs defaultValue="orders" className="space-y-4">
@@ -170,6 +191,7 @@ export function DrugsTab() {
               onActiveChange={setActiveEditorId}
               onDraftChange={updateDraft}
             />
+            <SubmitOrderCard count={selectedOrders.length} onSubmit={submitOrders} />
             <SummaryCard orders={selectedOrders} drafts={drafts} onEdit={openSummaryEditor} onDelete={deleteSummaryOrder} />
           </div>
         </TabsContent>

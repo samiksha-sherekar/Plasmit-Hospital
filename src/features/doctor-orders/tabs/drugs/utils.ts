@@ -37,5 +37,6 @@ export function makeDraft(order: DrugOrder): OrderDraft {
     orderedQty: "",
     route: "",
     doseUnit: "",
+    taperDoses: [],
   };
 }

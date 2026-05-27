@@ -42,6 +42,7 @@ export const navigationItems: NavigationItem[] = [
   { id: "completed-order", label: "Completed Orders", icon: ClipboardCheck, route: "/nurse/completed-order", group: "Nurse", allowedRoles: ["Nurse"], status: "ready" },
   { id: "discontinued-order", label: "Discontinued Orders", icon: Ban, route: "/nurse/discontinued-order", group: "Nurse", allowedRoles: ["Nurse"], status: "ready" },
   { id: "ldt-management", label: "LDT Management", icon: ListPlus, route: "/nurse/ldt-management", group: "Nurse", allowedRoles: ["Nurse"], status: "ready" },
+  { id: "pharmacist-drug-dispense", label: "Drug Dispense", icon: Pill, route: "/pharmacist/drug-dispense", group: "Pharmacist", allowedRoles: ["Pharmacist"], status: "ready" },
   { id: "blood-request", label: "Blood Requests", icon: Droplet, route: "/blood-bank/blood-request", group: "Blood Bank", allowedRoles: ["Blood Bank"], status: "ready" },
   { id: "hospital-admin-ldt", label: "LDT", icon: FlaskConical, route: "/hospital-admin/ldt", group: "Hospital Admin", allowedRoles: ["Hospital Admin"], status: "ready" },
   // { id: "hospital-admin-properties", label: "Properties Configuration", icon: SlidersHorizontal, route: "/hospital-admin/properties-configuration", group: "Hospital Admin", allowedRoles: ["Hospital Admin"], status: "ready" },

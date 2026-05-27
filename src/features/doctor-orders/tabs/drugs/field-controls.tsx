@@ -1,11 +1,13 @@
 "use client";
 
 import * as React from "react";
+import { Plus, Trash2 } from "lucide-react";
 
+import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
 import { doseUnits, forms, frequencies, orderCategories, routes } from "./data";
-import type { DraftCategory, OrderDraft } from "./types";
+import type { DraftCategory, OrderDraft, TaperDose } from "./types";
 
 export function FieldLabel({ children }: { children: React.ReactNode }) {
   return <span className="text-xs font-medium text-muted-foreground">{children}</span>;
@@ -47,6 +49,15 @@ function CategoryRadioGroup({ value, onChange }: { value: DraftCategory; onChang
   );
 }
 
+const createTaperDose = (): TaperDose => ({
+  id: `taper-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+  dose: "",
+  unit: "",
+  frequency: "",
+  fromDate: "",
+  toDate: "",
+});
+
 export function DrugDraftFields({
   draft,
   flash,
@@ -65,6 +76,21 @@ export function DrugDraftFields({
   const showDays = Boolean(draft.category) && draft.category !== "Continuous" && draft.category !== "Unscheduled";
   const showStartDate = Boolean(draft.category) && draft.category !== "SOS" && draft.category !== "Unscheduled";
   const showMaxDosage = draft.category === "SOS";
+  const taperDoses = draft.taperDoses.length ? draft.taperDoses : [createTaperDose()];
+
+  const updateTaperDose = (id: string, values: Partial<TaperDose>) => {
+    const currentRows = draft.taperDoses.length ? draft.taperDoses : taperDoses;
+    onChange({ taperDoses: currentRows.map((row) => (row.id === id ? { ...row, ...values } : row)) });
+  };
+
+  const addTaperDose = () => {
+    onChange({ taperDoses: [...taperDoses, createTaperDose()] });
+  };
+
+  const removeTaperDose = (id: string) => {
+    const nextRows = taperDoses.filter((row) => row.id !== id);
+    onChange({ taperDoses: nextRows.length ? nextRows : [createTaperDose()] });
+  };
 
   return (
     <div className="space-y-4">
@@ -137,7 +163,44 @@ export function DrugDraftFields({
           <FieldLabel>Instructions</FieldLabel>
           <Input value={draft.instructions} onChange={(event) => onChange({ instructions: event.target.value })} />
         </label>
-        {/* Tapered dose field is intentionally hidden for now. */}
+        <div className="space-y-2 sm:col-span-2">
+          <div className="flex items-center justify-between gap-2">
+            <FieldLabel>Taper dose</FieldLabel>
+            <Button type="button" size="icon" variant="outline" onClick={addTaperDose} aria-label="Add taper dose">
+              <Plus className="h-4 w-4" />
+            </Button>
+          </div>
+          <div className="space-y-2">
+            {taperDoses.map((row) => (
+              <div key={row.id} className="grid gap-2 rounded-md border border-border bg-surface-muted p-2 sm:grid-cols-[1fr_92px_120px_1fr_1fr_40px]">
+                <Input
+                  value={row.dose}
+                  onChange={(event) => updateTaperDose(row.id, { dose: event.target.value })}
+                  placeholder="Dose"
+                />
+                <SelectField value={row.unit} options={doseUnits} onChange={(unit) => updateTaperDose(row.id, { unit })} />
+                <SelectField value={row.frequency} options={frequencies} onChange={(frequency) => updateTaperDose(row.id, { frequency })} />
+                <Input
+                  type="date"
+                  value={row.fromDate}
+                  min={today}
+                  onChange={(event) => updateTaperDose(row.id, { fromDate: event.target.value })}
+                  aria-label="From date"
+                />
+                <Input
+                  type="date"
+                  value={row.toDate}
+                  min={row.fromDate || today}
+                  onChange={(event) => updateTaperDose(row.id, { toDate: event.target.value })}
+                  aria-label="To date"
+                />
+                <Button type="button" size="icon" variant="ghost" onClick={() => removeTaperDose(row.id)} aria-label="Remove taper dose">
+                  <Trash2 className="h-4 w-4" />
+                </Button>
+              </div>
+            ))}
+          </div>
+        </div>
       </div>
     </div>
   );

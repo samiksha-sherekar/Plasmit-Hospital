@@ -18,9 +18,9 @@ export function NurseMedicationPatientSummary() {
       <CardContent className="grid gap-3 p-3 sm:grid-cols-2 lg:grid-cols-5">
         <DetailItem label="Patient Name" value="Rahul Sharma" />
         <DetailItem label="Age/Gender" value="45 / Male" />
-        <DetailItem label="Ward/Bed" value="ICU-2" />
+        {/* <DetailItem label="Ward/Bed" value="ICU-2" /> */}
         <DetailItem label="Allergy" value={<Badge tone="warning">NSAID caution</Badge>} />
-        <DetailItem label="Shift" value="Morning" />
+        {/* <DetailItem label="Shift" value="Morning" /> */}
       </CardContent>
     </Card>
   );

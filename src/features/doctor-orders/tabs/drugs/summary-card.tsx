@@ -46,6 +46,7 @@ export function SummaryCard({
                     <th className="border-b border-border px-[var(--density-table-cell-x)] py-[var(--density-table-cell-y)]">Days</th>
                     <th className="border-b border-border px-[var(--density-table-cell-x)] py-[var(--density-table-cell-y)]">Total Qty</th>
                     <th className="border-b border-border px-[var(--density-table-cell-x)] py-[var(--density-table-cell-y)]">Instruction</th>
+                    <th className="border-b border-border px-[var(--density-table-cell-x)] py-[var(--density-table-cell-y)]">Taper dose</th>
                     <th className="border-b border-border px-[var(--density-table-cell-x)] py-[var(--density-table-cell-y)] text-right">Actions</th>
                   </tr>
                 </thead>
@@ -70,6 +71,21 @@ export function SummaryCard({
                         <td className="px-[var(--density-table-cell-x)] py-[var(--density-table-cell-y)]">{draft.category === "Unscheduled" ? "-" : draft.days || "-"}</td>
                         <td className="px-[var(--density-table-cell-x)] py-[var(--density-table-cell-y)] font-semibold">{draft.orderedQty || "-"}</td>
                         <td className="max-w-64 truncate px-[var(--density-table-cell-x)] py-[var(--density-table-cell-y)]">{draft.instructions || "-"}</td>
+                        <td className="max-w-72 px-[var(--density-table-cell-x)] py-[var(--density-table-cell-y)]">
+                          {draft.taperDoses.filter((row) => row.dose || row.frequency || row.fromDate || row.toDate).length ? (
+                            <div className="space-y-1 text-xs">
+                              {draft.taperDoses
+                                .filter((row) => row.dose || row.frequency || row.fromDate || row.toDate)
+                                .map((row) => (
+                                  <div key={row.id} className="truncate">
+                                    {row.dose || "-"} {row.unit || ""} / {row.frequency || "-"} / {row.fromDate || "-"} to {row.toDate || "-"}
+                                  </div>
+                                ))}
+                            </div>
+                          ) : (
+                            "-"
+                          )}
+                        </td>
                         <td className="px-[var(--density-table-cell-x)] py-[var(--density-table-cell-y)]">
                           <div className="flex justify-end gap-2">
                             <Button size="icon" variant="outline" onClick={() => onEdit(order.id)} aria-label={`Edit ${draft.name}`}>

@@ -23,6 +23,15 @@ export type DrugOrder = {
   modifiedFromId?: string;
 };
 
+export type TaperDose = {
+  id: string;
+  dose: string;
+  unit: DoseUnit;
+  frequency: string;
+  fromDate: string;
+  toDate: string;
+};
+
 export type OrderDraft = {
   name: string;
   form: string;
@@ -37,4 +46,5 @@ export type OrderDraft = {
   orderedQty: string;
   route: string;
   doseUnit: DoseUnit;
+  taperDoses: TaperDose[];
 };
