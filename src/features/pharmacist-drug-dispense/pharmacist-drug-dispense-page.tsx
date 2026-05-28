@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { PackageCheck, Pill, UserRound } from "lucide-react";
+import { ArrowDown, ArrowUp, ChevronsUpDown, PackageCheck, Pill, Search, UserRound } from "lucide-react";
 import { toast } from "sonner";
 
 import { useRole } from "@/components/providers/role-provider";
@@ -17,6 +17,18 @@ import { nurseDrugOrders } from "@/features/nurse-drug-administration/data";
 import type { NurseDrugOrder } from "@/features/nurse-drug-administration/types";
 
 const pharmacistRoles: Role[] = ["Pharmacist", "Super Admin", "Hospital Admin"];
+type SortKey = "name" | "category" | "dosage" | "orderedQty" | "dispensedQty" | "status";
+type SortState = { key: SortKey; direction: "asc" | "desc" };
+
+const sortableColumns: { key: SortKey | "action"; label: string; className?: string }[] = [
+  { key: "name", label: "Drug" },
+  { key: "category", label: "Category" },
+  { key: "dosage", label: "Dose" },
+  { key: "orderedQty", label: "Ordered" },
+  { key: "dispensedQty", label: "Dispensed" },
+  { key: "status", label: "Status" },
+  { key: "action", label: "Action", className: "text-right" },
+];
 
 function dispenseStatus(order: NurseDrugOrder, nextDispenseQty = order.dispensedQty) {
   if (nextDispenseQty <= 0) return "Pending";
@@ -24,6 +36,35 @@ function dispenseStatus(order: NurseDrugOrder, nextDispenseQty = order.dispensed
   return "Dispensed";
 }
 
+function SortButton({ label, column, sort, onSort }: { label: string; column: SortKey; sort: SortState; onSort: (key: SortKey) => void }) {
+  const active = sort.key === column;
+  const SortIcon = active ? (sort.direction === "asc" ? ArrowUp : ArrowDown) : ChevronsUpDown;
+
+  return (
+    <button
+      className="flex items-center gap-2 text-left font-semibold uppercase tracking-wide hover:text-primary-foreground/80"
+      onClick={() => onSort(column)}
+      type="button"
+    >
+      {label}
+      <SortIcon className={active ? "h-3.5 w-3.5 text-primary-foreground" : "h-3.5 w-3.5 text-primary-foreground/70"} />
+    </button>
+  );
+}
+
+function DetailItem({ label, value }: { label: string; value: React.ReactNode }) {
+  return (
+    <div className="flex items-center gap-2 rounded-md border border-border bg-surface-muted p-3">
+      <div className="text-xs font-medium text-muted-foreground">
+        {label}:
+      </div>
+
+      <div className="text-sm font-semibold text-foreground">
+        {value}
+      </div>
+    </div>
+  );
+}
 export function PharmacistDrugDispensePage() {
   const { role } = useRole();
   const allowed = pharmacistRoles.includes(role);
@@ -33,6 +74,36 @@ export function PharmacistDrugDispensePage() {
       return acc;
     }, {}),
   );
+  const [search, setSearch] = React.useState("");
+  const [sort, setSort] = React.useState<SortState>({ key: "name", direction: "asc" });
+
+  const displayedOrders = React.useMemo(() => {
+    const query = search.trim().toLowerCase();
+
+    return [...nurseDrugOrders]
+      .filter((order) => {
+        const quantity = Number(quantities[order.id]) || 0;
+        const status = dispenseStatus(order, quantity);
+        return `${order.name} ${order.form} ${order.route} ${order.category} ${order.dosage} ${order.orderedQty} ${quantity} ${status}`
+          .toLowerCase()
+          .includes(query);
+      })
+      .sort((left, right) => {
+        const leftQuantity = Number(quantities[left.id]) || 0;
+        const rightQuantity = Number(quantities[right.id]) || 0;
+        const leftValue = sort.key === "dispensedQty" ? leftQuantity : sort.key === "status" ? dispenseStatus(left, leftQuantity) : left[sort.key];
+        const rightValue = sort.key === "dispensedQty" ? rightQuantity : sort.key === "status" ? dispenseStatus(right, rightQuantity) : right[sort.key];
+        const result = Number.isFinite(Number(leftValue)) && Number.isFinite(Number(rightValue))
+          ? Number(leftValue) - Number(rightValue)
+          : String(leftValue).localeCompare(String(rightValue));
+
+        return sort.direction === "asc" ? result : -result;
+      });
+  }, [quantities, search, sort]);
+
+  const updateSort = (key: SortKey) => {
+    setSort((current) => ({ key, direction: current.key === key && current.direction === "asc" ? "desc" : "asc" }));
+  };
 
   if (!allowed) {
     return (
@@ -58,7 +129,7 @@ export function PharmacistDrugDispensePage() {
       <PageHeader
         eyebrow="Pharmacist Workspace"
         title="Drug Dispense"
-        description="Doctor drug orders are dispensed here before nurse receipt and administration."
+        // description="Doctor drug orders are dispensed here before nurse receipt and administration."
       />
 
       <Card>
@@ -67,25 +138,52 @@ export function PharmacistDrugDispensePage() {
             <Pill className="h-4 w-4 text-primary" />
             Doctor Order Queue
           </CardTitle>
-          {/* <CardDescription>Dispensed quantity controls whether the nurse Receive button is enabled.</CardDescription> */}
+          <CardDescription>Search and sort drug orders before dispensing.</CardDescription>
         </CardHeader>
-        <CardContent>
+        <Card>
+                <CardContent className="grid gap-3 p-3 sm:grid-cols-2 lg:grid-cols-4">
+                  <DetailItem label="Patient Name" value="Rahul Sharma" />
+                  {/* <DetailItem label="UHID" value="UH1023" /> */}
+                  <DetailItem label="Age/Gender" value="45 / Male" />
+                  <DetailItem label="Blood Group" value="A+" />
+                  {/* <DetailItem label="Ward/Bed" value="ICU-2" /> */}
+                </CardContent>
+              </Card>
+        <CardContent className="space-y-3">
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+            <div className="relative sm:w-80">
+              <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+              <Input
+                className="pl-9"
+                value={search}
+                onChange={(event) => setSearch(event.target.value)}
+                placeholder="Search drug, category, dose, or status..."
+              />
+            </div>
+            <Badge tone="info">{displayedOrders.length} visible row(s)</Badge>
+          </div>
+
           <div className="overflow-hidden rounded-lg border border-border">
             <div className="max-w-full overflow-x-auto">
               <table className="w-full min-w-[980px] border-collapse text-left text-sm">
                 <thead className="bg-primary text-xs font-semibold uppercase tracking-wide text-primary-foreground">
                   <tr>
-                    <th className="border-b border-r border-primary-foreground/20 px-[var(--density-table-cell-x)] py-[var(--density-table-cell-y)]">Drug</th>
-                    <th className="border-b border-r border-primary-foreground/20 px-[var(--density-table-cell-x)] py-[var(--density-table-cell-y)]">Category</th>
-                    <th className="border-b border-r border-primary-foreground/20 px-[var(--density-table-cell-x)] py-[var(--density-table-cell-y)]">Dose</th>
-                    <th className="border-b border-r border-primary-foreground/20 px-[var(--density-table-cell-x)] py-[var(--density-table-cell-y)]">Ordered</th>
-                    <th className="border-b border-r border-primary-foreground/20 px-[var(--density-table-cell-x)] py-[var(--density-table-cell-y)]">Dispensed</th>
-                    <th className="border-b border-r border-primary-foreground/20 px-[var(--density-table-cell-x)] py-[var(--density-table-cell-y)]">Status</th>
-                    <th className="border-b border-primary-foreground/20 px-[var(--density-table-cell-x)] py-[var(--density-table-cell-y)] text-right">Action</th>
+                    {sortableColumns.map((column, index) => (
+                      <th
+                        key={column.key}
+                        className={[
+                          "border-b border-primary-foreground/20 px-[var(--density-table-cell-x)] py-[var(--density-table-cell-y)]",
+                          index < sortableColumns.length - 1 ? "border-r" : "",
+                          column.className,
+                        ].filter(Boolean).join(" ")}
+                      >
+                        {column.key === "action" ? column.label : <SortButton label={column.label} column={column.key} sort={sort} onSort={updateSort} />}
+                      </th>
+                    ))}
                   </tr>
                 </thead>
                 <tbody>
-                  {nurseDrugOrders.map((order) => {
+                  {displayedOrders.length ? displayedOrders.map((order) => {
                     const quantity = Number(quantities[order.id]) || 0;
                     const status = dispenseStatus(order, quantity);
                     return (
@@ -120,7 +218,13 @@ export function PharmacistDrugDispensePage() {
                         </td>
                       </tr>
                     );
-                  })}
+                  }) : (
+                    <tr>
+                      <td className="px-[var(--density-table-cell-x)] py-6 text-center text-sm text-muted-foreground" colSpan={sortableColumns.length}>
+                        No drug orders match your search.
+                      </td>
+                    </tr>
+                  )}
                 </tbody>
               </table>
             </div>
