@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import type { ColumnDef } from "@tanstack/react-table";
-import { CheckCircle2, ClipboardCheck, Droplet, Eye, FileText, Search, UserRound } from "lucide-react";
+import { CheckCircle2, ClipboardCheck, Droplet, Eye, FileText, UserRound } from "lucide-react";
 
 import { useRole } from "@/components/providers/role-provider";
 import { Badge } from "@/components/ui/badge";
@@ -11,8 +11,10 @@ import { Card, CardContent, CardDescription, CardHeader } from "@/components/ui/
 import { DataTable } from "@/components/ui/data-table";
 import { Drawer } from "@/components/ui/drawer";
 import { EmptyState } from "@/components/ui/empty-state";
-import { Input } from "@/components/ui/input";
+import { SearchInput } from "@/components/ui/search-input";
 import { PageHeader } from "@/components/shell/page-header";
+import { mockPatients } from "@/data/patients";
+import { PatientSearchSelect } from "@/features/patients/patient-search-select";
 import type { Role } from "@/types";
 
 type CompletedOrder = {
@@ -181,6 +183,8 @@ export function CompletedOrderPage() {
   const { role } = useRole();
   const [searchQuery, setSearchQuery] = React.useState("");
   const allowed = nurseRoles.includes(role);
+  const [patientId, setPatientId] = React.useState(mockPatients[0]?.id ?? "");
+  const patient = mockPatients.find((item) => item.id === patientId) ?? mockPatients[0];
   const totalUnitsTransfused = completedOrders.reduce((total, order) => total + order.unitsTransfused, 0);
 
   if (!allowed) {
@@ -203,10 +207,10 @@ export function CompletedOrderPage() {
 
       <Card>
         <CardContent className="grid gap-3 p-3 sm:grid-cols-2 lg:grid-cols-4">
-          <DetailItem label="Patient Name" value="Rahul Sharma" />
+          <PatientSearchSelect patientId={patient.id} onPatientChange={setPatientId} />
           {/* <DetailItem label="UHID" value="UH1023" /> */}
-          <DetailItem label="Age/Gender" value="45 / Male" />
-          <DetailItem label="Blood Group" value="A+" />
+          <DetailItem label="Age/Gender" value={`${patient.age} / ${patient.gender}`} />
+          <DetailItem label="Blood Group" value={patient.bloodGroup} />
           {/* <DetailItem label="Ward/Bed" value="ICU-2" /> */}
         </CardContent>
       </Card>
@@ -249,16 +253,7 @@ export function CompletedOrderPage() {
             {/* <label className="text-xs font-medium text-muted-foreground" htmlFor="completed-order-search">
               Search completed orders
             </label> */}
-            <div className="relative">
-              <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-              <Input
-                id="completed-order-search"
-                value={searchQuery}
-                onChange={(event) => setSearchQuery(event.target.value)}
-                placeholder="Search product, reason, date..."
-                className="pl-9"
-              />
-            </div>
+            <SearchInput id="completed-order-search" value={searchQuery} onChange={(event) => setSearchQuery(event.target.value)} placeholder="Search product, reason, date..." />
             {/* <CardDescription>Search filters the completed order list below.</CardDescription> */}
           </div>
           <Badge tone="success">Read only</Badge>

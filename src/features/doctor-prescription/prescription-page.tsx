@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { ArrowDown, ArrowUp, ChevronsUpDown, MoreVertical, Pill, Plus, Save, Search, Trash2, UserRound } from "lucide-react";
+import { ArrowDown, ArrowUp, ChevronsUpDown, MoreVertical, Pill, Plus, Trash2, UserRound } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 
@@ -11,8 +11,10 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Input } from "@/components/ui/input";
+import { SearchInput } from "@/components/ui/search-input";
 import { useRole } from "@/components/providers/role-provider";
 import { mockPatients } from "@/data/patients";
+import { PatientSearchSelect } from "@/features/patients/patient-search-select";
 import type { Role } from "@/types";
 
 type PatientForm = {
@@ -133,9 +135,9 @@ function formatDisplayDate(value: string) {
 
 function DetailItem({ label, value }: { label: string; value: React.ReactNode }) {
   return (
-    <div className="flex items-center gap-2 rounded-md border border-border bg-surface-muted p-3">
-      <div className="text-xs font-medium text-muted-foreground">{label}:</div>
-      <div className="min-w-0 break-words text-sm font-semibold text-foreground">{value}</div>
+    <div className="space-y-1">
+      <div className="text-xs font-medium text-muted-foreground">{label}</div>
+      <div className="flex min-h-10 items-center rounded-md border border-input bg-background px-3 text-sm font-semibold text-foreground">{value}</div>
     </div>
   );
 }
@@ -171,13 +173,16 @@ function PatientInformation({
   values,
   errors,
   onChange,
+  selectedPatientId,
+  onPatientSelect,
 }: {
   values: PatientForm;
   errors: Errors;
   onChange: (values: Partial<PatientForm>) => void;
+  selectedPatientId: string;
+  onPatientSelect: (patientId: string) => void;
 }) {
   const details = [
-    { label: "Patient Name", value: values.patientName },
     { label: "MRN", value: values.mrn },
     { label: "Date of Birth", value: formatDisplayDate(values.dateOfBirth) },
     { label: "Age / Gender", value: values.ageGender },
@@ -191,6 +196,7 @@ function PatientInformation({
     <div className="space-y-4">
       <Card>
         <CardContent className="grid gap-3 p-3 sm:grid-cols-2 lg:grid-cols-4">
+          <PatientSearchSelect patientId={selectedPatientId} onPatientChange={onPatientSelect} />
           {details.map((detail) => (
             <DetailItem key={detail.label} label={detail.label} value={detail.value || "-"} />
           ))}
@@ -387,10 +393,7 @@ function DrugTable({
       </CardHeader>
       <CardContent className="space-y-3">
         <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-          <div className="relative sm:w-80">
-            <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-            <Input className="pl-9" value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Search drugs..." />
-          </div>
+          <SearchInput className="sm:w-80" value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Search drugs..." />
           <Badge tone="info">{rows.length} Row(s)</Badge>
         </div>
         <FieldError>{errors.drugs}</FieldError>
@@ -485,11 +488,8 @@ function validatePrescription(patient: PatientForm, drugs: DrugRow[]) {
   return nextErrors;
 }
 
-export function PrescriptionPage() {
-  const { role } = useRole();
-  const router = useRouter();
-  const patient = mockPatients[0];
-  const [patientForm, setPatientForm] = React.useState<PatientForm>({
+function buildPatientForm(patient: (typeof mockPatients)[number]): PatientForm {
+  return {
     patientName: `${patient.firstName} ${patient.lastName}`,
     mrn: patient.uhid,
     dateOfBirth: patient.dateOfBirth,
@@ -497,10 +497,17 @@ export function PrescriptionPage() {
     phone: patient.mobile,
     date: todayIso,
     consultant: loggedInDoctorName,
-    address: ` ${patient.city}, ${patient.state} ${patient.pinCode}`,
-    // address: `${patient.address}, ${patient.city}, ${patient.state} ${patient.pinCode}`,
+    address: `${patient.city}, ${patient.state} ${patient.pinCode}`,
     diagnosis: "",
-  });
+  };
+}
+
+export function PrescriptionPage() {
+  const { role } = useRole();
+  const router = useRouter();
+  const patient = mockPatients[0];
+  const [selectedPatientId, setSelectedPatientId] = React.useState(patient.id);
+  const [patientForm, setPatientForm] = React.useState<PatientForm>(() => buildPatientForm(patient));
   const [drugs, setDrugs] = React.useState<DrugRow[]>([createDrugRow()]);
   const [registrationNumber, setRegistrationNumber] = React.useState("MMC-2014-48291");
   const [errors, setErrors] = React.useState<Errors>({});
@@ -518,6 +525,12 @@ export function PrescriptionPage() {
     router.push("/doctor/orders?tab=drugs");
   };
 
+  const selectPatient = (patientId: string) => {
+    const selectedPatient = mockPatients.find((item) => item.id === patientId) ?? patient;
+    setSelectedPatientId(selectedPatient.id);
+    setPatientForm((current) => ({ ...buildPatientForm(selectedPatient), diagnosis: current.diagnosis }));
+  };
+
   return (
     <div className="space-y-6">
       <PageHeader
@@ -532,7 +545,13 @@ export function PrescriptionPage() {
         // }
       />
 
-      <PatientInformation values={patientForm} errors={errors} onChange={(values) => setPatientForm((current) => ({ ...current, ...values }))} />
+      <PatientInformation
+        values={patientForm}
+        errors={errors}
+        selectedPatientId={selectedPatientId}
+        onPatientSelect={selectPatient}
+        onChange={(values) => setPatientForm((current) => ({ ...current, ...values }))}
+      />
       <DrugTable
         rows={drugs}
         errors={errors}

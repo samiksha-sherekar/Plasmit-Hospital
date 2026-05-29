@@ -82,7 +82,7 @@ export function DrugsTab() {
   const filteredOrders = orders.filter((order) =>
     `${order.name} ${order.form}`.toLowerCase().includes(search.trim().toLowerCase()),
   );
-  const selectableOrders = filteredOrders.filter((order) => order.category !== "Discontinued");
+  const selectableOrders = filteredOrders;
   const selectedOrders = selectedDrugIds.map((id) => orders.find((order) => order.id === id)).filter(Boolean) as DrugOrder[];
 
   const flashTotalQty = (id: string) => {
@@ -110,6 +110,10 @@ export function DrugsTab() {
         nextDraft.days = "";
         nextDraft.startDate = "";
         nextDraft.endDate = "";
+      }
+      if (values.category === "Discontinued") {
+        nextDraft.days = "0";
+        nextDraft.orderedQty = "0";
       }
       if (values.startDate && nextDraft.endDate && nextDraft.endDate < values.startDate) {
         nextDraft.endDate = "";

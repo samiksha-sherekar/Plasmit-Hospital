@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import type { ColumnDef } from "@tanstack/react-table";
-import { Droplet, Eye, Search, Send, ShieldCheck, UserRound } from "lucide-react";
+import { Droplet, Eye, Send, ShieldCheck, UserRound } from "lucide-react";
 import { toast } from "sonner";
 
 import { useRole } from "@/components/providers/role-provider";
@@ -14,6 +14,7 @@ import { DataTable } from "@/components/ui/data-table";
 import { Drawer } from "@/components/ui/drawer";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Input } from "@/components/ui/input";
+import { SearchInput } from "@/components/ui/search-input";
 import { PageHeader } from "@/components/shell/page-header";
 import type { Role, StatusTone } from "@/types";
 
@@ -384,16 +385,7 @@ export function BloodRequestPage() {
             {/* <label className="text-xs font-medium text-muted-foreground" htmlFor="blood-request-search">
               Search requests
             </label> */}
-            <div className="relative">
-              <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-              <Input
-                id="blood-request-search"
-                value={searchQuery}
-                onChange={(event) => setSearchQuery(event.target.value)}
-                placeholder="Search patient, blood group,unit,product,reason..."
-                className="pl-9"
-              />
-            </div>
+            <SearchInput id="blood-request-search" value={searchQuery} onChange={(event) => setSearchQuery(event.target.value)} placeholder="Search patient, blood group,unit,product,reason..." />
             {/* <CardDescription>Search filters the blood request queue below.</CardDescription> */}
           </div>
           <Badge tone="info">Blood Bank</Badge>

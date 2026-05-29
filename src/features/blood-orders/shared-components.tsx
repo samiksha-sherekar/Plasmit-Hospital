@@ -1,11 +1,13 @@
 "use client";
 
 import * as React from "react";
-import { Search, type LucideIcon } from "lucide-react";
+import { type LucideIcon } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
+import { SearchInput } from "@/components/ui/search-input";
+import { mockPatients } from "@/data/patients";
+import { PatientSearchSelect } from "@/features/patients/patient-search-select";
 import type { StatusTone } from "@/types";
 
 export function DetailItem({ label, value }: { label: string; value: React.ReactNode }) {
@@ -39,12 +41,15 @@ export function Textarea({
 }
 
 export function PatientSummaryCard() {
+  const [patientId, setPatientId] = React.useState(mockPatients[0]?.id ?? "");
+  const patient = mockPatients.find((item) => item.id === patientId) ?? mockPatients[0];
+
   return (
     <Card>
       <CardContent className="grid gap-3 p-3 sm:grid-cols-2 lg:grid-cols-4">
-        <DetailItem label="Patient Name" value="Rahul Sharma" />
-        <DetailItem label="Age/Gender" value="45 / Male" />
-        <DetailItem label="Blood Group" value="A+" />
+        <PatientSearchSelect patientId={patient.id} onPatientChange={setPatientId} />
+        <DetailItem label="Age/Gender" value={`${patient.age} / ${patient.gender}`} />
+        <DetailItem label="Blood Group" value={patient.bloodGroup} />
       </CardContent>
     </Card>
   );
@@ -69,16 +74,7 @@ export function SearchTableCard({
     <Card>
       <CardHeader>
         <div className="w-full max-w-md space-y-2">
-          <div className="relative">
-            <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-            <Input
-              id={searchId}
-              value={searchValue}
-              onChange={(event) => onSearchChange(event.target.value)}
-              placeholder={searchPlaceholder}
-              className="pl-9"
-            />
-          </div>
+          <SearchInput id={searchId} value={searchValue} onChange={(event) => onSearchChange(event.target.value)} placeholder={searchPlaceholder} />
         </div>
         <Badge tone={badge.tone}>{badge.label}</Badge>
       </CardHeader>

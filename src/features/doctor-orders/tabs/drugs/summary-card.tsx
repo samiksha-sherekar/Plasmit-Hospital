@@ -1,6 +1,7 @@
 "use client";
 
-import { Pencil, Trash2 } from "lucide-react";
+import * as React from "react";
+import { ArrowDown, ArrowUp, ChevronsUpDown, Pencil, Trash2 } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -8,6 +9,43 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 
 import type { DrugOrder, OrderDraft } from "./types";
 import { categoryTone } from "./utils";
+
+type SummarySortKey = "name" | "category" | "form" | "route" | "dosage" | "frequency" | "days" | "orderedQty" | "instructions" | "taper";
+type SummarySort = { key: SummarySortKey; direction: "asc" | "desc" };
+
+const columns: { key: SummarySortKey | "actions"; label: string; className?: string }[] = [
+  { key: "name", label: "Drug" },
+  { key: "category", label: "Category" },
+  { key: "form", label: "Form" },
+  { key: "route", label: "Route" },
+  { key: "dosage", label: "Dosage" },
+  { key: "frequency", label: "Frequency" },
+  { key: "days", label: "Days" },
+  { key: "orderedQty", label: "Total Qty" },
+  { key: "instructions", label: "Instruction" },
+  { key: "taper", label: "Taper dose" },
+  { key: "actions", label: "Actions", className: "text-right" },
+];
+
+function SortButton({ label, column, sort, onSort }: { label: string; column: SummarySortKey; sort: SummarySort; onSort: (key: SummarySortKey) => void }) {
+  const active = sort.key === column;
+  const SortIcon = active ? (sort.direction === "asc" ? ArrowUp : ArrowDown) : ChevronsUpDown;
+
+  return (
+    <button type="button" className="flex items-center gap-2 text-left font-semibold uppercase tracking-wide hover:text-foreground" onClick={() => onSort(column)}>
+      {label}
+      <SortIcon className={active ? "h-3.5 w-3.5 text-foreground" : "h-3.5 w-3.5 text-muted-foreground/70"} />
+    </button>
+  );
+}
+
+function draftValue(draft: OrderDraft, key: SummarySortKey) {
+  if (key === "dosage") return draft.dosage ? `${draft.dosage} ${draft.doseUnit}` : draft.maxDosage;
+  if (key === "frequency") return !draft.category || draft.category === "Unscheduled" || draft.category === "SOS" ? "" : draft.frequency;
+  if (key === "days") return draft.category === "Unscheduled" ? "" : draft.days;
+  if (key === "taper") return draft.taperDoses.map((row) => `${row.dose} ${row.unit} ${row.frequency} ${row.fromDate} ${row.toDate}`).join(" ");
+  return draft[key] ?? "";
+}
 
 export function SummaryCard({
   orders,
@@ -20,6 +58,27 @@ export function SummaryCard({
   onEdit: (id: string) => void;
   onDelete: (id: string) => void;
 }) {
+  const [sort, setSort] = React.useState<SummarySort>({ key: "name", direction: "asc" });
+  const sortedOrders = React.useMemo(() => {
+    return [...orders].sort((left, right) => {
+      const leftDraft = drafts[left.id];
+      const rightDraft = drafts[right.id];
+      if (!leftDraft || !rightDraft) return 0;
+
+      const leftValue = draftValue(leftDraft, sort.key);
+      const rightValue = draftValue(rightDraft, sort.key);
+      const result = Number.isFinite(Number(leftValue)) && Number.isFinite(Number(rightValue))
+        ? Number(leftValue) - Number(rightValue)
+        : String(leftValue).localeCompare(String(rightValue));
+
+      return sort.direction === "asc" ? result : -result;
+    });
+  }, [drafts, orders, sort]);
+
+  const updateSort = (key: SummarySortKey) => {
+    setSort((current) => ({ key, direction: current.key === key && current.direction === "asc" ? "desc" : "asc" }));
+  };
+
   return (
     <Card className="col-span-full xl:col-span-2">
       <CardHeader>
@@ -37,21 +96,15 @@ export function SummaryCard({
               <table className="w-full min-w-[1040px] border-collapse text-left text-sm">
                 <thead className="bg-surface-muted text-xs font-semibold uppercase tracking-wide text-muted-foreground">
                   <tr>
-                    <th className="border-b border-border px-[var(--density-table-cell-x)] py-[var(--density-table-cell-y)]">Drug</th>
-                    <th className="border-b border-border px-[var(--density-table-cell-x)] py-[var(--density-table-cell-y)]">Category</th>
-                    <th className="border-b border-border px-[var(--density-table-cell-x)] py-[var(--density-table-cell-y)]">Form</th>
-                    <th className="border-b border-border px-[var(--density-table-cell-x)] py-[var(--density-table-cell-y)]">Route</th>
-                    <th className="border-b border-border px-[var(--density-table-cell-x)] py-[var(--density-table-cell-y)]">Dosage</th>
-                    <th className="border-b border-border px-[var(--density-table-cell-x)] py-[var(--density-table-cell-y)]">Frequency</th>
-                    <th className="border-b border-border px-[var(--density-table-cell-x)] py-[var(--density-table-cell-y)]">Days</th>
-                    <th className="border-b border-border px-[var(--density-table-cell-x)] py-[var(--density-table-cell-y)]">Total Qty</th>
-                    <th className="border-b border-border px-[var(--density-table-cell-x)] py-[var(--density-table-cell-y)]">Instruction</th>
-                    <th className="border-b border-border px-[var(--density-table-cell-x)] py-[var(--density-table-cell-y)]">Taper dose</th>
-                    <th className="border-b border-border px-[var(--density-table-cell-x)] py-[var(--density-table-cell-y)] text-right">Actions</th>
+                    {columns.map((column) => (
+                      <th key={column.key} className={["border-b border-border px-[var(--density-table-cell-x)] py-[var(--density-table-cell-y)]", column.className].filter(Boolean).join(" ")}>
+                        {column.key === "actions" ? column.label : <SortButton label={column.label} column={column.key} sort={sort} onSort={updateSort} />}
+                      </th>
+                    ))}
                   </tr>
                 </thead>
                 <tbody>
-                  {orders.map((order) => {
+                  {sortedOrders.map((order) => {
                     const draft = drafts[order.id];
                     if (!draft) return null;
                     return (

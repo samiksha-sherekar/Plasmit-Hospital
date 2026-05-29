@@ -22,6 +22,8 @@ import { Drawer } from "@/components/ui/drawer";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Input } from "@/components/ui/input";
 import { PageHeader } from "@/components/shell/page-header";
+import { mockPatients } from "@/data/patients";
+import { PatientSearchSelect } from "@/features/patients/patient-search-select";
 import type { Role, StatusTone } from "@/types";
 
 type UnitStatus = "In Progress" | "Completed" | "Discontinued";
@@ -352,6 +354,8 @@ function ActiveOrdersCard() {
 export function ActiveOrderPage() {
   const { role } = useRole();
   const allowed = nurseRoles.includes(role);
+  const [patientId, setPatientId] = React.useState(mockPatients[0]?.id ?? "");
+  const patient = mockPatients.find((item) => item.id === patientId) ?? mockPatients[0];
 
   if (!allowed) {
     return (
@@ -371,12 +375,12 @@ export function ActiveOrderPage() {
         description="Track released blood requests and capture nursing administration details."
       />
 
-      <Card>
+      <Card className="sticky top-4 z-20">
         <CardContent className="grid gap-3 p-3 sm:grid-cols-2 lg:grid-cols-4">
-          <DetailItem label="Patient Name" value="Rahul Sharma" />
+          <PatientSearchSelect patientId={patient.id} onPatientChange={setPatientId} />
           {/* <DetailItem label="UHID" value="UH1023" /> */}
-          <DetailItem label="Age/Gender" value="45 / Male" />
-          <DetailItem label="Blood Group" value="A+" />
+          <DetailItem label="Age/Gender" value={`${patient.age} / ${patient.gender}`} />
+          <DetailItem label="Blood Group" value={patient.bloodGroup} />
           {/* <DetailItem label="Ward/Bed" value="ICU-2" /> */}
         </CardContent>
       </Card>

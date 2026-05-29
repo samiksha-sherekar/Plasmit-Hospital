@@ -1,6 +1,6 @@
 import type { DoseUnit, DrugCategory, DrugOrder } from "./types";
 
-export const orderCategories: Exclude<DrugCategory, "Discontinued">[] = ["Scheduled", "SOS", "Intermittent", "Continuous", "Unscheduled"];
+export const orderCategories: DrugCategory[] = ["Scheduled", "SOS", "Intermittent", "Continuous", "Discontinued", "Unscheduled"];
 export const forms = ["Tablet", "Capsule", "Syrup", "Injection", "IV Fluid", "Cream", "Drops"];
 export const frequencies = ["OD", "BD", "TDS", "QID", "6 hrly", "8 hrly", "Continuous", "Intermittent"];
 export const routes = ["Oral", "IV", "IM", "SC", "Topical", "Inhalation", "Nebulization", "Eye", "Ear"];

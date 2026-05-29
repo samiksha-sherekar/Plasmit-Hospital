@@ -1,5 +1,5 @@
 export type DrugCategory = "Scheduled" | "SOS" | "Intermittent" | "Continuous" | "Discontinued" | "Unscheduled";
-export type DraftCategory = Exclude<DrugCategory, "Discontinued"> | "";
+export type DraftCategory = DrugCategory | "";
 export type DoseUnit = "" | "mg" | "mcg" | "g" | "ml" | "units" | "drops" | "puffs";
 
 export type DrugOrder = {

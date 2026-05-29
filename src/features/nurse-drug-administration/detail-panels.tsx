@@ -79,9 +79,9 @@ function FormField({ label, children }: { label: string; children: React.ReactNo
 
 function ReadOnlyField({ label, value }: { label: string; value: React.ReactNode }) {
   return (
-    <div className="rounded-md border border-border bg-surface-muted p-3">
-      <div className="text-xs font-medium text-muted-foreground">{label}</div>
-      <div className="mt-1 text-sm font-semibold text-foreground">{value || "-"}</div>
+    <div className="flex h-9 items-center justify-between gap-3 rounded-md border border-input bg-background px-3">
+      <div className="shrink-0 text-xs font-medium text-muted-foreground">{label}</div>
+      <div className="min-w-0 truncate text-sm font-semibold text-foreground">{value || "-"}</div>
     </div>
   );
 }
@@ -211,34 +211,74 @@ export function AdministrationDetailsPanel({
       }
     >
       <div className="grid gap-4">
-        <div className="grid gap-3 sm:grid-cols-2">
+        {/* Row 1 */}
+        <div className="grid gap-3 md:grid-cols-3">
           <FormField label="Date">
             <Input
               type="date"
               max={formatCurrentDate()}
               value={detail.administrationDate}
-              onChange={(event) => onChange({ ...detail, administrationDate: event.target.value })}
+              onChange={(event) =>
+                onChange({ ...detail, administrationDate: event.target.value })
+              }
             />
           </FormField>
+
           <FormField label="Dosage">
-            <Input value={detail.dosage} onChange={(event) => onChange({ ...detail, dosage: event.target.value })} />
+            <Input
+              value={detail.dosage}
+              onChange={(event) =>
+                onChange({ ...detail, dosage: event.target.value })
+              }
+            />
           </FormField>
+
           <FormField label="Time">
-            <Input type="time" value={detail.time} onChange={(event) => onChange({ ...detail, time: event.target.value })} />
+            <Input
+              type="time"
+              value={detail.time}
+              onChange={(event) =>
+                onChange({ ...detail, time: event.target.value })
+              }
+            />
           </FormField>
-          <ReadOnlyField label="Last administered at" value={detail.lastAdministeredAt} />
-          <ReadOnlyField label="Last administered by" value={detail.lastAdministeredBy} />
         </div>
 
-        <FormField label="Action">
-          <SelectField value={detail.action} options={administrationActions} onChange={(action) => onChange({ ...detail, action })} />
-        </FormField>
+        {/* Row 2 */}
+        <div className="grid gap-3 md:grid-cols-2">
+          <ReadOnlyField
+            label="Last administered at"
+            value={detail.lastAdministeredAt}
+          />
 
-        {reasonRequired ? (
-          <FormField label="Reason">
-            <Input value={detail.reason} onChange={(event) => onChange({ ...detail, reason: event.target.value })} placeholder="Enter reason" />
+          <ReadOnlyField
+            label="Last administered by"
+            value={detail.lastAdministeredBy}
+          />
+        </div>
+
+        {/* Row 3 */}
+        <div className="grid gap-3 md:grid-cols-2">
+          <FormField label="Action">
+            <SelectField
+              value={detail.action}
+              options={administrationActions}
+              onChange={(action) => onChange({ ...detail, action })}
+            />
           </FormField>
-        ) : null}
+
+          {reasonRequired && (
+            <FormField label="Reason">
+              <Input
+                value={detail.reason}
+                onChange={(event) =>
+                  onChange({ ...detail, reason: event.target.value })
+                }
+                placeholder="Enter reason"
+              />
+            </FormField>
+          )}
+        </div>
 
         <CounterCheckFields
           checked={detail.counterChecked}
@@ -333,71 +373,132 @@ export function FluidAdministrationDetailsPanel({
       }
     >
       <div className="grid gap-4">
-        <div className="grid gap-3 sm:grid-cols-2">
+        {/* Row 1 */}
+        <div className="grid gap-3 md:grid-cols-3">
           <FormField label="Date">
             <Input
               type="date"
               max={formatCurrentDate()}
               value={detail.administrationDate}
-              onChange={(event) => onChange({ ...detail, administrationDate: event.target.value })}
+              onChange={(event) =>
+                onChange({ ...detail, administrationDate: event.target.value })
+              }
             />
           </FormField>
+
           <FormField label="Rate">
             <Input
               value={detail.rate}
               readOnly={!canEditRate}
               className={!canEditRate ? "bg-surface-muted" : undefined}
-              onChange={(event) => onChange({ ...detail, rate: event.target.value })}
+              onChange={(event) =>
+                onChange({ ...detail, rate: event.target.value })
+              }
             />
           </FormField>
+
           <FormField label="Time">
-            <Input type="time" value={detail.time} onChange={(event) => onChange({ ...detail, time: event.target.value })} />
+            <Input
+              type="time"
+              value={detail.time}
+              onChange={(event) =>
+                onChange({ ...detail, time: event.target.value })
+              }
+            />
           </FormField>
-          <ReadOnlyField label="Last administered at" value={detail.lastAdministeredAt} />
-          <ReadOnlyField label="Last administered by" value={detail.lastAdministeredBy} />
         </div>
 
-        <div className="grid gap-3 sm:grid-cols-3">
+        {/* Row 2 */}
+        <div className="grid gap-3 md:grid-cols-3">
+          <ReadOnlyField
+            label="Last administered at"
+            value={detail.lastAdministeredAt}
+          />
+
+          <ReadOnlyField
+            label="Last administered by"
+            value={detail.lastAdministeredBy}
+          />
+
+          <ReadOnlyField
+            label="Volume remaining"
+            value={`${detail.volumeRemaining || remaining} ml`}
+          />
+        </div>
+
+        {/* Row 3 */}
+        <div className="grid gap-3 md:grid-cols-2">
           <FormField label="Bag volume (ml)">
-            <Input type="number" min={0} value={detail.bagVolume} onChange={(event) => onChange({ ...detail, bagVolume: event.target.value })} />
+            <Input
+              type="number"
+              min={0}
+              value={detail.bagVolume}
+              onChange={(event) =>
+                onChange({ ...detail, bagVolume: event.target.value })
+              }
+            />
           </FormField>
+
           <FormField label="Volume administered (ml)">
             <Input
               type="number"
               min={0}
               value={detail.volumeAdministered}
-              onChange={(event) => onChange({ ...detail, volumeAdministered: event.target.value })}
+              onChange={(event) =>
+                onChange({
+                  ...detail,
+                  volumeAdministered: event.target.value,
+                })
+              }
             />
           </FormField>
-          <ReadOnlyField label="Volume remaining" value={`${detail.volumeRemaining || remaining} ml`} />
         </div>
 
-        <label className="flex items-center gap-2 rounded-md border border-border bg-surface-muted p-3 text-sm font-medium text-foreground">
-          <input
-            type="checkbox"
-            checked={detail.newBag}
-            onChange={(event) => updateNewBag(event.target.checked)}
-            className="h-4 w-4 rounded border-input text-primary focus:ring-ring"
-          />
-          New bag
-          <span className="ml-auto text-xs text-muted-foreground">Bag count: {detail.bagCount}</span>
-        </label>
+        {/* Row 4 */}
+        <div className="grid gap-3 md:grid-cols-2">
+          <label className="flex items-center gap-2 rounded-md border border-border bg-surface-muted p-3 text-sm font-medium text-foreground">
+            <input
+              type="checkbox"
+              checked={detail.newBag}
+              onChange={(event) => updateNewBag(event.target.checked)}
+              className="h-4 w-4 rounded border-input text-primary focus:ring-ring"
+            />
+            New bag
+            <span className="ml-auto text-xs text-muted-foreground">
+              Bag count: {detail.bagCount}
+            </span>
+          </label>
 
-        <div className="grid gap-3 sm:grid-cols-2">
           <ReadOnlyField label="Bolus dose" value={detail.bolusDose} />
+        </div>
+
+        {/* Row 5 */}
+        <div className="grid gap-3 md:grid-cols-2">
           <FormField label="Stop administration">
             <Input
               type="datetime-local"
               value={detail.stopAdministrationAt}
-              onChange={(event) => onChange({ ...detail, stopAdministrationAt: event.target.value })}
+              onChange={(event) =>
+                onChange({
+                  ...detail,
+                  stopAdministrationAt: event.target.value,
+                })
+              }
+            />
+          </FormField>
+
+          <FormField label="Reason">
+            <Input
+              value={detail.reason}
+              onChange={(event) =>
+                onChange({ ...detail, reason: event.target.value })
+              }
+              placeholder="Optional note"
             />
           </FormField>
         </div>
 
-        <FormField label="Reason">
-          <Input value={detail.reason} onChange={(event) => onChange({ ...detail, reason: event.target.value })} placeholder="Optional note" />
-        </FormField>
-
+        {/* Counter Check Section */}
         <CounterCheckFields
           checked={detail.counterChecked}
           checkedBy={detail.counterCheckedBy}
@@ -406,8 +507,10 @@ export function FluidAdministrationDetailsPanel({
             onChange({
               ...detail,
               counterChecked: values.checked ?? detail.counterChecked,
-              counterCheckedBy: values.checkedBy ?? detail.counterCheckedBy,
-              counterCheckedAt: values.checkedAt ?? detail.counterCheckedAt,
+              counterCheckedBy:
+                values.checkedBy ?? detail.counterCheckedBy,
+              counterCheckedAt:
+                values.checkedAt ?? detail.counterCheckedAt,
             })
           }
         />

@@ -1,10 +1,10 @@
 "use client";
 
 import * as React from "react";
-import { ChevronDown, Search } from "lucide-react";
+import { ChevronDown } from "lucide-react";
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
+import { SearchInput } from "@/components/ui/search-input";
 
 import type { DrugOrder } from "./types";
 
@@ -58,10 +58,9 @@ export function SelectDrugsCard({
       <CardContent className="space-y-3">
         <div ref={rootRef} className="relative">
           <div className="relative">
-            <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-            <Input
+            <SearchInput
               ref={inputRef}
-              className="pr-9 pl-9"
+              className="[&_input]:pr-9"
               value={open ? search : selectedValue}
               onFocus={openDropdown}
               onClick={() => setOpen(true)}

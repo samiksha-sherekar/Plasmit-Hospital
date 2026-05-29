@@ -154,10 +154,10 @@ export function DrugDraftFields({
           <Input
             type="number"
             min={0}
-            className={flash ? "border-success bg-success/10 ring-2 ring-success/20 transition" : "transition"}
-          value={draft.orderedQty}
-          onChange={(event) => onChange({ orderedQty: event.target.value })}
-        />
+            readOnly
+            className={flash ? "border-success bg-success/10 font-semibold ring-2 ring-success/20 transition" : "bg-surface-muted font-semibold transition"}
+            value={draft.orderedQty}
+          />
         </label>
         <label className="space-y-2 sm:col-span-2">
           <FieldLabel>Instructions</FieldLabel>

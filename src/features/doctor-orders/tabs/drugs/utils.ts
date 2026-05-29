@@ -16,6 +16,7 @@ export function remainingQty(order: DrugOrder) {
 export function calculateAutoQty(category: DraftCategory, frequency: string, days: string) {
   if (!category) return 0;
   if (category === "Unscheduled") return 1;
+  if (category === "Discontinued") return 0;
   const parsedDays = Number(days);
   const multiplier = frequencyMultiplier[frequency] ?? 1;
   if (!Number.isFinite(parsedDays) || parsedDays <= 0) return 0;

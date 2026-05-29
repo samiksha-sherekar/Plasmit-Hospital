@@ -13,6 +13,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Drawer } from "@/components/ui/drawer";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Input } from "@/components/ui/input";
+import { mockPatients } from "@/data/patients";
+import { PatientSearchSelect } from "@/features/patients/patient-search-select";
 import type { Role } from "@/types";
 
 type FieldType = "Free text" | "Date" | "Time" | "Number" | "Dropdown" | "Checkbox";
@@ -559,6 +561,8 @@ export function LdtAssessmentPage({ ldtId = defaultLdtId }: { ldtId?: string }) 
   const [entries, setEntries] = React.useState<AssessmentEntry[]>([]);
   const [selectedDate, setSelectedDate] = React.useState(formatCurrentDate);
   const [editingEntry, setEditingEntry] = React.useState<AssessmentEntry | null>(null);
+  const [patientId, setPatientId] = React.useState(mockPatients[0]?.id ?? "");
+  const patient = mockPatients.find((item) => item.id === patientId) ?? mockPatients[0];
   const allowed = nurseRoles.includes(role);
 
   React.useEffect(() => {
@@ -665,9 +669,9 @@ export function LdtAssessmentPage({ ldtId = defaultLdtId }: { ldtId?: string }) 
 
       <Card>
         <CardContent className="grid gap-3 p-3 sm:grid-cols-2 lg:grid-cols-4">
-          <DetailItem label="Patient Name" value="Rahul Sharma" />
-          <DetailItem label="Age/Gender" value="45 / Male" />
-          <DetailItem label="Blood Group" value="A+" />
+          <PatientSearchSelect patientId={patient.id} onPatientChange={setPatientId} />
+          <DetailItem label="Age/Gender" value={`${patient.age} / ${patient.gender}`} />
+          <DetailItem label="Blood Group" value={patient.bloodGroup} />
           <DetailItem label="LDT" value={`${ldtConfig.name} (${ldtConfig.type})`} />
         </CardContent>
       </Card>
